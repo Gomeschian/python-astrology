@@ -1,34 +1,35 @@
+import os
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-def get_celebrity_info(celebrity_name):
+def get_person_info(person_name):
     # Convert names without underscores to match Wikipedia naming convention
-    wikipedia_name = celebrity_name.replace(" ", "_")
+    wikipedia_name = person_name.replace(" ", "_")
     url = f"https://en.wikipedia.org/wiki/{wikipedia_name}"
     
     try:
         response = requests.get(url)
         response.raise_for_status()  # Raise an exception if the HTTP request fails
     except requests.exceptions.RequestException as e:
-        print(f"An error occurred while making the HTTP request for {celebrity_name}:", e)
+        print(f"An error occurred while making the HTTP request for {person_name}:", e)
         return None
 
     soup = BeautifulSoup(response.content, "html.parser")
     birthdate_element = soup.find("span", class_="bday")
     
     if birthdate_element is None:
-        print(f"Birthdate element not found for {celebrity_name}")
+        print(f"Birthdate element not found for {person_name}")
         return None
     
     try:
         birthdate = birthdate_element.text
-        print(f"The raw birthdate of {celebrity_name} is: {birthdate}")
+        print(f"The raw birthdate of {person_name} is: {birthdate}")
         zodiac_sign, date_range = get_zodiac_sign(birthdate)
-        print(f"The zodiac sign of {celebrity_name} is: {zodiac_sign} ({date_range})")
-        return {'Celebrity Name': celebrity_name, 'Birthdate': birthdate, 'Zodiac Sign': zodiac_sign, 'Date Range': date_range}
+        print(f"The zodiac sign of {person_name} is: {zodiac_sign} ({date_range})")
+        return {'Person Name': person_name, 'Birthdate': birthdate, 'Zodiac Sign': zodiac_sign, 'Date Range': date_range}
     except AttributeError:
-        print(f"Error occurred while accessing the birthdate element for {celebrity_name}")
+        print(f"Error occurred while accessing the birthdate element for {person_name}")
         return None
 
 def get_zodiac_sign(birthdate):
@@ -60,42 +61,53 @@ def get_zodiac_sign(birthdate):
     else:
         return "Pisces", "February 19 - March 20"
 
-# List of celebrities
-celebrities = [
-    "Emma Watson",
-    "Chris Hemsworth",
-    "Zendaya",
-    "Ryan Reynolds",
-    "Scarlett Johansson",
-    "Keanu Reeves",
-    "Priyanka Chopra",
-    "Dwayne Johnson",
-    "Gal Gadot",
-    "Leonardo DiCaprio",
-    "Margot Robbie",
-    "Robert Downey Jr.",
-    "Natalie Portman",
-    "Tom Holland",
-    "Charlize Theron",
-    "Jason Momoa",
-    "Taylor Swift",
-    "Johnny Depp",
-    "Angelina Jolie",
-    "Elon Musk"
+# File name
+file_name = "people_info_with_zodiac.xlsx"
+
+# List of names
+names = [
+    "Napoleon Bonaparte",
+    "Rosa Parks",
+    "Winston Churchill",
+    "Mao Zedong",
+    "Fidel Castro",
+    "Indira Gandhi",
+    "Mother Teresa",
+    "Michael Jackson",
+    "Oprah Winfrey",
+    "Pele",
+    "Bill Gates",
+    "Malala Yousafzai",
+    "Stephen Hawking",
+    "Albert Camus",
+    "Billie Holiday",
+    "Freddie Mercury",
+    "Ruth Bader Ginsburg",
+    "Diego Maradona",
+    "J.K. Rowling",
+    "Vincent Price"
 ]
 
-# List to store data for all celebrities
-data_list = []
 
-# Loop through each celebrity
-for celebrity in celebrities:
-    celebrity_info = get_celebrity_info(celebrity)
-    if celebrity_info:
-        data_list.append(celebrity_info)
+
+# Check if the file exists
+if os.path.exists(file_name):
+    # Read existing data into a DataFrame
+    existing_df = pd.read_excel(file_name)
+    data_list = existing_df.to_dict(orient='records')
+else:
+    # Create an empty list to store data
+    data_list = []
+
+# Loop through each name
+for name in names:
+    person_info = get_person_info(name)
+    if person_info:
+        data_list.append(person_info)
 
 # Create a DataFrame from the list of data
 df = pd.DataFrame(data_list)
 
-# Save the DataFrame to an Excel file
-df.to_excel("celebrities_info_with_zodiac.xlsx", index=False)
-print("Data saved to celebrities_info_with_zodiac.xlsx")
+# Save the DataFrame to the file
+df.to_excel(file_name, index=False)
+print(f"Data saved to {file_name}")
